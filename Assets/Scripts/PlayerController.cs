@@ -1,16 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
     public float speed = 1.0f;
     private Rigidbody rb;
+    private int pickupCount;
 
     void Start()
     {
         // Gets the rigidbody component attached to this game object
         rb = GetComponent<Rigidbody>();
+        //Gets the number of pickups in our scene
+        pickupCount = GameObject.FindGameObjectsWithTag("Pickup").Length;
+        //Run the check pickups function
+        CheckPickups(); 
     }
 
     void FixedUpdate()
@@ -27,12 +33,31 @@ public class PlayerController : MonoBehaviour
         rb.AddForce(movement * speed * Time.deltaTime);
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        if (collision.gameObject.tag == "Pickup")
+        if (other.gameObject.tag == "Pickup");
         {
-            Destroy(collision.gameObject);
+            //Destroy the collided object
+            Destroy(other.gameObject);
+            //Decrement the pickup count
+            pickupCount--;
+            //Run the check pickups function
+            CheckPickups() ;
         }
-        
+    }
+    
+    private void CheckPickups()
+    {
+        print("Pickups left: " + pickupCount);
+        if(pickupCount == 0)
+        {
+            WinGame();
+        }
+    }
+
+    private void WinGame()
+    {
+        print("Yay you win");
     }
 }
+    
