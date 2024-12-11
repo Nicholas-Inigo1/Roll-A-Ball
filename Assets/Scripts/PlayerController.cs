@@ -14,6 +14,9 @@ public class PlayerController : MonoBehaviour
     private float pickupChunk;
     private Timer timer;
     private bool gameOver = false;
+    GameObject resetPoint;
+    bool resetting = false;
+    Color originalColor;
 
     [Header("UI")]
     public TMP_Text pickupText;
@@ -25,6 +28,8 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        Time.timeScale = 1;
+        
         // Gets the rigidbody component attached to this game object
         rb = GetComponent<Rigidbody>();
         //Gets the number of pickups in our scene
@@ -44,6 +49,9 @@ public class PlayerController : MonoBehaviour
         winpPanel.SetActive(false);
         //Turn on our in game panel
         inGamePanel.SetActive(true);
+
+        resetPoint = GameObject.Find("Reset Point");
+        originalColor = GetComponent<Renderer>().material.color;
     }
 
     private void Update()
@@ -56,6 +64,9 @@ public class PlayerController : MonoBehaviour
         if (gameOver == true)
             return;
 
+        if (resetting)
+            return;
+
         //Store the horizontal axis value in a float
         float moveHorizontal = Input.GetAxis("Horizontal");
         //Store the vertical axis value in a float
@@ -65,7 +76,7 @@ public class PlayerController : MonoBehaviour
         Vector3 movement = new Vector3(moveHorizontal, 0, moveVertical);
 
         //Add force to our rigidbody from our movement vector * speed variable
-        rb.AddForce(movement * speed * Time.deltaTime);
+        rb.AddForce(movement * speed);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -82,7 +93,34 @@ public class PlayerController : MonoBehaviour
             CheckPickups() ;
         }
     }
-    
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.CompareTag("Respawn"))
+        {
+            StartCoroutine(ResetPlayer());
+        }
+    }
+
+    public IEnumerator ResetPlayer()
+    {
+        resetting = true;
+        GetComponent<Renderer>().material.color = Color.black;
+        rb.velocity = Vector3.zero;
+        Vector3 startPos = transform.position;
+        float resetSpeed = 2f;
+        var i = 0.0f;
+        var rate = 1.0f / resetSpeed;
+        while (i < 1.0f)
+        {
+            i += Time.deltaTime * rate;
+            transform.position = Vector3.Lerp(startPos, resetPoint.transform.position, i);
+            yield return null;
+        }
+        GetComponent<Renderer>().material.color = originalColor;
+        resetting = false;
+    }
+
     private void CheckPickups()
     {
         //Do Text stuff
